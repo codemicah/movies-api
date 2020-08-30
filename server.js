@@ -22,7 +22,7 @@ const registerRoute = require("./routes/register"),
 //attach routes to server
 app.use(registerRoute);
 app.use(loginRoute);
-// app.use(moviesRoute);
+app.use("/movies", moviesRoute);
 
 app.get("/", (req, res)=>{
     return res.status(200).json({

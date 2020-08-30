@@ -35,24 +35,36 @@ module.exports.register = async(req, res)=>{
     //proceed if username is free
     //hash password
     password = await bcrypt.hash(password, 10);
-    //generate an access token
-    const accessToken = await jwt.sign({
-        username
-    }, JWT_SECRET);
-
+    
     const newUser = new userModel({
         username,
         password,
-        accessToken
     });
-    await userModel.create(newUser).then((success)=>{
-        return res.status(201).json({
+
+    await userModel.create(newUser).then(async(success)=>{
+        //generate an access token
+        const accessToken = await jwt.sign({
+            username,
+            user_id: success._id
+        }, JWT_SECRET);
+        success.accessToken = accessToken;
+
+        const createdUser = await success.save();
+        if (createdUser) return res.status(201).json({
             success: false,
             message: "user registration successfull",
             data: {
                 statusCode: 201,
                 description: "user account was successfully created",
-                data: success
+                data: createdUser
+            }
+        });
+        return res.status(500).json({
+            success: false,
+            message: "internal server error",
+            error: {
+                statusCode: 500,
+                description: "could not create user account"
             }
         });
     }).catch((error)=>{
