@@ -53,37 +53,41 @@ module.exports.createList = async(req, res)=>{
         description: "list name is required",
       },
     });
-    listModel.findOne({ name: listname }, async(error, movieList)=>{
-        if (movieList) return res.status(409).json({
-            success: false,
-            message: "list already exists",
-            error: {
-                statusCode: 409,
-                description: "a list with the given name already exists",
-            },
-        });
-        const list = await listModel.create({
-            name: listname,
-            user_ref_id: currentUser
-        });
 
-        if (!list) return res.status(500).json({
-            success: false,
-            message: "internal server error",
-            error: {
-                statusCode: 500,
-                description: "internal server error",
-            },
-        });
-        return res.status(201).json({
-            success: true,
-            message: "movie list created successfully",
-            data: {
-                statusCode: 201,
-                description: "movie list created successfully",
-                list
-            },
-        });
+    listModel.find({ name: listname }, async(error, movieList)=>{
+        if (movieList && (movieList.filter(list=> list.user_ref_id.equals(currentUser))).length > 0){
+            return res.status(409).json({
+                success: false,
+                message: "list already exists",
+                error: {
+                    statusCode: 409,
+                    description: "a list with the given name already exists",
+                },
+            });
+        }else{
+            const list = await listModel.create({
+                name: listname,
+                user_ref_id: currentUser
+            });
+
+            if (!list) return res.status(500).json({
+                success: false,
+                message: "internal server error",
+                error: {
+                    statusCode: 500,
+                    description: "internal server error",
+                },
+            });
+            return res.status(201).json({
+                success: true,
+                message: "movie list created successfully",
+                data: {
+                    statusCode: 201,
+                    description: "movie list created successfully",
+                    list
+                },
+            });
+        }
     });    
 };
 

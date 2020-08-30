@@ -19,7 +19,10 @@ module.exports.register = async(req, res)=>{
             }
         });
     }
-
+    //remove excess spaces
+    username = username.trim();
+    password = password.trim();
+    
     //make sure username is not taken
     const user = await userModel.findOne({ username });
 

@@ -3,8 +3,8 @@ const userModel = require("../models/user"),
             jwt = require("jsonwebtoken");
 
 module.exports.login = async(req, res)=>{
-    const username = req.body.username;
-    const password = req.body.password;
+    let username = req.body.username;
+    let password = req.body.password;
 
     if (!username || !password) {
         return res.status(401).json({
@@ -16,6 +16,10 @@ module.exports.login = async(req, res)=>{
             }
         });
     }
+     //remove excess spaces
+     username = username.trim();
+     password = password.trim();
+
     await userModel.findOne({ username }).then(async (user)=>{
         if(await bcrypt.compare(password, user.password)){
             return res.status(200).json({

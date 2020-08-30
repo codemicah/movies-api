@@ -8,6 +8,12 @@ API to create and manage movie lists
 * `cp sample.env .env` to copy enviroment variables from `sample.env` into a new file  called `.env`
 * finally run `npm start` or `npm run dev` to start the developement server
 
+## Authentication
+Authentication is by an access token which is required for even API call.
+To authenticate your request, pass your access token (which is shown on registration and login) as part of the headers: `access-token`
+
+e.g `curl -get https://mimovies-api.herokuapp.com/movies -H "access-token: youraccesstoken"`
+
 ## Endpoints
 - [POST] `/register` - endpoint to register a new user account.
     * **Body**
@@ -40,7 +46,7 @@ API to create and manage movie lists
         - `movie_id`
     * **Body**
         - value(s) to update (rating, title, year, or genre)
-        
+
 - [DELETE] - `/movies/list/movie/delete/{movie_id}` - remove a movie from list
     * **Params**
         - `movie_id`
