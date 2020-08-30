@@ -3,22 +3,35 @@ const request = require("request"),
             listModel = require("../models/movie_list"),
             movieModel = require("../models/movie");
 
+
 const { TMDB_API_KEY } = process.env;
 
 module.exports.getMovies  = async(req, res)=>{
 
     let movies = [];
 
+    //recursive function stops when 200 movies are retrieved
     async function redo(moviesLength) {
         let movieId = Math.round(Math.random() * 1000);
-        const url = `https://api.themoviedb.org/3/movie/${movieId}?api_key=${TMDB_API_KEY}&language=en-US`;
+        const url = `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&language=en-US`;
         await request(url, async (error, response, body) => {
             if (body) {
-                await movies.push(body);
-                return res.send(body);
+                body = JSON.parse(body)
+                await body.results.map(movie=>{
+                    movies.push(movie);
+                });
                 if (movies.length == 200) {
                     req.movies = await movies;
-                    res.end();
+                    res.status(200).json({
+                        success: true,
+                        message: "successfully retrieved movies",
+                        total: movies.length, 
+                        data:{ 
+                            statusCode: 200,
+                            description: "list of 200 popular movies",
+                            movies 
+                        }
+                        });
                 } else {
                     redo(moviesLength + 1);
                 }
@@ -30,6 +43,7 @@ module.exports.getMovies  = async(req, res)=>{
 
 module.exports.createList = async(req, res)=>{
     const listname = req.body.list_name;
+    const currentUser = req.user.user_id;
 
     if(!listname) return res.status(400).json({
       success: false,
@@ -49,8 +63,10 @@ module.exports.createList = async(req, res)=>{
             },
         });
         const list = await listModel.create({
-            name: listname
+            name: listname,
+            user_ref_id: currentUser
         });
+
         if (!list) return res.status(500).json({
             success: false,
             message: "internal server error",
@@ -69,6 +85,42 @@ module.exports.createList = async(req, res)=>{
             },
         });
     });    
+};
+
+module.exports.getLists = async(req, res)=>{
+    const currentUser = req.user.user_id;
+    const lists = await listModel.find({});
+    const movies = await movieModel.find({});
+
+    if (!lists) return res.status(404).json({
+        success: false,
+        message: "list not found",
+        error: {
+            statusCode: 404,
+            description: "no list found with the given name"
+        }
+    });
+    let userLists = [];
+    await lists.filter((list)=> {
+        if (list.user_ref_id.equals(currentUser)){
+            let allMovies = [];
+            movies.filter(movie=>{
+                if(movie.list_ref_id.equals(list._id)){
+                    allMovies.push(movie);
+                }
+            });
+            userLists.push({ list, movies: allMovies});
+        }
+    });
+    res.status(200).json({
+        success: true,
+        message: "user lists",
+        data: { 
+            statusCode: 200,
+            description: "successfully retrieved user lists",
+            lists: userLists
+         }
+    });
 };
 
 module.exports.addMovie = async(req, res)=>{
@@ -119,26 +171,35 @@ module.exports.addMovie = async(req, res)=>{
                 newMovie
             },
         });
+    }).catch(error=>{
+        return res.status(404).json({
+            success: false,
+            message: "list not found",
+            error:{
+                statusCode: 404,
+                description: "no list found with the given name"
+            }
+        });
     });
 };
 
-module.exports.updateMovie = async(req, res)=>{
+module.exports.updateMovie = async (req, res)=>{
     const reqBody = req.body;
-    const rating = reqBody.rating;
+    const { rating, title, genre, year }= reqBody;
     const movie_id = req.params.movie_id;
 
     // validate required body
-    if (!rating){
+    if (!reqBody){
         return res.status(400).json({
             success: false,
-            message: "invalid rating",
+            message: "invalid values",
             error: {
                 statusCode: 400,
-                description: "new rating is required",
+                description: "nothing to update",
             },
         });
         //rating must ne a number
-    }else if(! Number(rating)){
+    }else if(rating && !Number(rating)){
         return res.status(400).json({
             success: false,
             message: "invalid rating",
@@ -158,15 +219,30 @@ module.exports.updateMovie = async(req, res)=>{
             },
         });
     }
+    movieModel.findById(movie_id).then(async movie=>{
+        movie.title = title || movie.title;
+        movie.year = year || movie.year;
+        movie.genre = genre || movie.genre;
+        movie.rating = rating || movie.rating;
 
-    movieModel.findByIdAndUpdate(movie_id, { rating }, { new: true, useFindAndModify: false}).then(updatedMovie=>{
-        return res.status(200).json({
+        const updatedMovie = await movie.save();
+
+        if (updatedMovie) return res.status(200).json({
             success: true,
             message: "movie updated successfully",
             data: {
                 statusCode: 200,
                 description: "movie updated successfully",
                 updatedMovie
+            },
+        });
+
+        return res.status(500).json({
+            success: false,
+            message: "internal server error",
+            error: {
+                statusCode: 500,
+                description: "could not update movie",
             },
         });
     }).catch(error=>{
@@ -181,6 +257,7 @@ module.exports.updateMovie = async(req, res)=>{
     });
 };
 
+//remove movie from list
 module.exports.removeMovie = async(req, res)=>{
     const movie_id = req.params.movie_id;
     const currentUser = req.user.user_id;
