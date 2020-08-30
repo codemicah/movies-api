@@ -25,14 +25,15 @@ app.use(loginRoute);
 app.use("/movies", moviesRoute);
 
 app.get("/", (req, res)=>{
-    return res.status(200).json({
-        success: true,
-        message: "movies-api",
-        data: {
-            statusCode: 200,
-            description: "movies-api root route"
-        }
-    });
+    // return res.status(200).json({
+    //     success: true,
+    //     message: "movies-api",
+    //     data: {
+    //         statusCode: 200,
+    //         description: "movies-api root route"
+    //     }
+    // });
+    res.redirect("https://github.com/Megxos/movies-api/blob/master/README.md");
 });
 
 app.get("*", (req, res)=>{

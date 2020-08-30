@@ -1,6 +1,5 @@
 const router = require("express").Router(),
             moviesController = require("../controllers/movies.controller"),
-            getMovie = require("../middleware/getMovies"),
             auth = require("../auth/auth");
 
 router.get("/" , auth.validate, moviesController.getMovies);
