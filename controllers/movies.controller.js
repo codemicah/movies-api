@@ -11,7 +11,7 @@ module.exports.getMovies  = async(req, res)=>{
 
     async function redo(moviesLength) {
         let movieId = Math.round(Math.random() * 1000);
-        const url = `https://api.themoviedb.org/3/movie/${movieId}?api_key=c73f38a0e70efb245855382c4ecaf641&language=en-US`;
+        const url = `https://api.themoviedb.org/3/movie/${movieId}?api_key=${TMDB_API_KEY}&language=en-US`;
         await request(url, async (error, response, body) => {
             if (body) {
                 await movies.push(body);
@@ -127,6 +127,7 @@ module.exports.updateMovie = async(req, res)=>{
     const rating = reqBody.rating;
     const movie_id = req.params.movie_id;
 
+    // validate required body
     if (!rating){
         return res.status(400).json({
             success: false,
@@ -136,6 +137,7 @@ module.exports.updateMovie = async(req, res)=>{
                 description: "new rating is required",
             },
         });
+        //rating must ne a number
     }else if(! Number(rating)){
         return res.status(400).json({
             success: false,
@@ -145,6 +147,7 @@ module.exports.updateMovie = async(req, res)=>{
                 description: "new rating must be a number",
             },
         });
+        //rating must be between 1 and 5
     }else if(Number(rating) > 5){
         return res.status(400).json({
             success: false,
@@ -177,3 +180,52 @@ module.exports.updateMovie = async(req, res)=>{
         });
     });
 };
+
+module.exports.removeMovie = async(req, res)=>{
+    const movie_id = req.params.movie_id;
+    const currentUser = req.user.user_id;
+
+    movieModel.findById(movie_id).then(async(movie) => {
+        //make sure correct user is making request
+        if(movie.user_ref_id.equals(currentUser)){
+            const removedMovie = await movie.remove();
+            if (removedMovie) return res.status(200).json({
+                success: true,
+                message: "movie removed successfully",
+                data: {
+                    statusCode: 200,
+                    description: "movie removed successfully",
+                    removedMovie
+                },
+            });
+            //if movie was not removed
+            return res.status(500).json({
+                success: false,
+                message: "internal server error",
+                error: {
+                    statusCode: 500,
+                    description: "could not remove that movie",
+                    removedMovie
+                },
+            });
+        }
+        return res.status(403).json({
+            success: false,
+            message: "forbidden",
+            error: {
+                statusCode: 403,
+                description: "you cannot remove this movie",
+                removedMovie
+            },
+        });
+    }).catch(error => {
+        return res.status(404).json({
+            success: false,
+            message: "movie not found",
+            error: {
+                statusCode: 404,
+                description: "movie does not exist",
+            },
+        });
+    });
+}
