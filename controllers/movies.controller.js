@@ -1,7 +1,7 @@
 require("dotenv").config();
 const request = require("request"),
-            listModel = require("../models/movie_list"),
-            movieModel = require("../models/movie");
+    listModel = require("../models/movie_list"),
+    movieModel = require("../models/movie");
 
 
 const { TMDB_API_KEY } = process.env;

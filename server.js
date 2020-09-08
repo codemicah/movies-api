@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express"),
-            database = require("./config/database"),
-            bodyParser = require("body-parser");
+    database = require("./config/database"),
+    bodyParser = require("body-parser");
 
 //initialize enviroment variables
 const { LOCAL_PORT } = process.env;
@@ -16,8 +16,8 @@ app.use(express.json());
 
 //import all routes
 const registerRoute = require("./routes/register"),
-            loginRoute = require("./routes/login"),
-            moviesRoute = require("./routes/movies");
+    loginRoute = require("./routes/login"),
+    moviesRoute = require("./routes/movies");
 
 
 //attach routes to server
@@ -26,14 +26,6 @@ app.use(loginRoute);
 app.use("/movies", moviesRoute);
 
 app.get("/", (req, res)=>{
-    // return res.status(200).json({
-    //     success: true,
-    //     message: "movies-api",
-    //     data: {
-    //         statusCode: 200,
-    //         description: "movies-api root route"
-    //     }
-    // });
     res.redirect("https://github.com/Megxos/movies-api/blob/master/README.md");
 });
 

@@ -1,6 +1,6 @@
 const router = require("express").Router(),
-            moviesController = require("../controllers/movies.controller"),
-            auth = require("../auth/auth");
+    moviesController = require("../controllers/movies.controller"),
+    auth = require("../auth/auth");
 
 router.get("/" , auth.validate, moviesController.getMovies);
 router.get("/list" , auth.validate, moviesController.getLists);
