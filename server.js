@@ -11,7 +11,8 @@ database.connect();
 
 //express configurations
 const app = express();
-app.use(bodyParser.urlencoded({ extended:true }));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
 
 //import all routes
 const registerRoute = require("./routes/register"),
