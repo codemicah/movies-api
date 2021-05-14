@@ -1,10 +1,11 @@
-const mongoose = require("mongoose");
+const { Schema, model } = require("mongoose");
 
-const Schema = mongoose.Schema;
+const listSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    user_ref_id: { type: Schema.Types.ObjectId, ref: "user", required: true },
+  },
+  { timestamps: true }
+);
 
-const listSchema = new Schema({
-    name: { type: String },
-    user_ref_id: { type: Schema.Types.ObjectId, ref: "user" },
-}, { timestamps: true });
-
-module.exports = mongoose.model("movie_list", listSchema);
+module.exports = model("movie_list", listSchema);
